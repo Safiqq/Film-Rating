@@ -112,72 +112,79 @@ function cariDetail(id) {
     return result;
 }
 
+function cariTrending() {
+    let result = fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${apiKey}`);
+    return result;
+}
+
 function cari(judul) {
     let urutan = [];
-    cariFilm(judul).then(res => res.json()).then(data => {
-        removeElementsByClass("row");
-        removeElementsByClass("detail");
-        data = data["results"];
-        if(data.length > 0) {
-            let divEl = document.createElement("div");
-            divEl.classList.add("row");
-            document.getElementsByClassName("lds-ellipsis")[0].style.display = "inline-block";
-            document.getElementsByTagName("html")[0].style.cursor = "progress";
-            for(let i = 0; i < data.length; i++) {
-                if(data[i]["original_language"] == "en") {
-                    // console.log(data[i]);
-                    if(data[i]["release_date"] !== null && data[i]["release_date"] !== "") {
-                        urutan[i] = data[i]["release_date"];
-                    }
-                }
-            }
-            urutan.sort().reverse();
-            // console.log(urutan);
-            sleep(1500).then(() => {
-                document.getElementsByClassName("lds-ellipsis")[0].style.display = "none";
-                document.getElementsByTagName("html")[0].style.cursor = "auto";
-                for(let j = 0; j < urutan.length; j++) {
-                    for(let i = 0; i < data.length; i++) {
-                        if(urutan[j] == data[i]["release_date"]) {
-                            dataDump[i] = data[i];
-                            let poster = data[i]["poster_path"];
-                            let deskripsi = data[i]["overview"];
-                            let rating = data[i]["vote_average"];
-                            let genres = "";
-                            for(let genreId in data[i]["genre_ids"]) {
-                                if(genres == "") {
-                                    genres = genreList[data[i]["genre_ids"][genreId]];
-                                } else {
-                                    genres += `, ${genreList[data[i]["genre_ids"][genreId]]}`;
-                                }
-                            }
-                            if(poster !== null && poster !== "") {
-                                let judul = data[i]["title"];
-                                let voter = data[i]["vote_count"];
-                                let id = data[i]["id"];
-                                divEl.innerHTML += `<div class="column" onclick="klikFilm(${id})" style="cursor: pointer;">
-                                    <img class="poster" src="https://image.tmdb.org/t/p/w500${poster}" align="left">
-                                    <h3 class="movie">${judul} (${urutan[j].slice(0, 4)})</h3>
-                                    <h3 class="rating">&#9733; ${rating} (${voter})</h3>
-                                    <h3 class="deskripsi">${deskripsi}</h3>
-                                </div>`
-                                body.append(divEl);
-                            }
+    if(judul !== null) {
+        cariFilm(judul).then(res => res.json()).then(data => {
+            removeElementsByClass("row");
+            removeElementsByClass("detail");
+            data = data["results"];
+            if(data.length > 0) {
+                let divEl = document.createElement("div");
+                divEl.classList.add("row");
+                document.getElementsByClassName("lds-ellipsis")[0].style.display = "inline-block";
+                document.getElementsByTagName("html")[0].style.cursor = "progress";
+                for(let i = 0; i < data.length; i++) {
+                    if(data[i]["original_language"] == "en") {
+                        // console.log(data[i]);
+                        if(data[i]["release_date"] !== null && data[i]["release_date"] !== "") {
+                            urutan[i] = data[i]["release_date"];
                         }
                     }
                 }
-            });
-        } else {
-            while(judul.search("%20") > -1) {
-                print(judul)
-                judul = judul.replace("%20", " ");
+                urutan.sort().reverse();
+                // console.log(urutan);
+                sleep(1500).then(() => {
+                    document.getElementsByClassName("lds-ellipsis")[0].style.display = "none";
+                    document.getElementsByTagName("html")[0].style.cursor = "auto";
+                    for(let j = 0; j < urutan.length; j++) {
+                        for(let i = 0; i < data.length; i++) {
+                            if(urutan[j] == data[i]["release_date"]) {
+                                dataDump[i] = data[i];
+                                let poster = data[i]["poster_path"];
+                                let deskripsi = data[i]["overview"];
+                                let rating = data[i]["vote_average"];
+                                let genres = "";
+                                for(let genreId in data[i]["genre_ids"]) {
+                                    if(genres == "") {
+                                        genres = genreList[data[i]["genre_ids"][genreId]];
+                                    } else {
+                                        genres += `, ${genreList[data[i]["genre_ids"][genreId]]}`;
+                                    }
+                                }
+                                if(poster !== null && poster !== "") {
+                                    let judul = data[i]["title"];
+                                    let voter = data[i]["vote_count"];
+                                    let id = data[i]["id"];
+                                    divEl.innerHTML += `<div class="column" onclick="klikFilm(${id})" style="cursor: pointer;">
+                                        <img class="poster" src="https://image.tmdb.org/t/p/w500${poster}" align="left">
+                                        <h3 class="movie">${judul} (${urutan[j].slice(0, 4)})</h3>
+                                        <h3 class="rating">&#9733; ${rating} (${voter})</h3>
+                                        <h3 class="deskripsi">${deskripsi}</h3>
+                                    </div>`
+                                    body.append(divEl);
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                while(judul.search("%20") > -1) {
+                    print(judul)
+                    judul = judul.replace("%20", " ");
+                }
+                let divEl = document.createElement("div");
+                divEl.classList.add("row");
+                divEl.innerHTML = `No film has found with the query of "${judul}".`;
+                body.append(divEl);
             }
-            let divEl = document.createElement("div");
-            divEl.classList.add("row");
-            divEl.innerHTML = `No film has found with the query of "${judul}".`;
-            body.append(divEl);
-        }
-    })
+        })
+    }
 }
 // console.log(dataDump)
 for(let x in dataDump) {
@@ -194,5 +201,39 @@ input.addEventListener("keyup", function (event) {
     // click listener on button is called
     if (event.keyCode == 13) {
         button.click();
+    }
+});
+cariTrending().then(res => res.json()).then(result => {
+    data = result["results"];
+    let divEl = document.createElement("div");
+    divEl.classList.add("row");
+    for(let i = 0; i < data.length; i++) {
+        if(data[i]["media_type"] == "movie") {
+            dataDump[i] = data[i];
+            let poster = data[i]["poster_path"];
+            let deskripsi = data[i]["overview"];
+            let rating = data[i]["vote_average"];
+            let genres = "";
+            let tahun = data[i]["release_date"];
+            for(let genreId in data[i]["genre_ids"]) {
+                if(genres == "") {
+                    genres = genreList[data[i]["genre_ids"][genreId]];
+                } else {
+                    genres += `, ${genreList[data[i]["genre_ids"][genreId]]}`;
+                }
+            }
+            if(poster !== null && poster !== "") {
+                let judul = data[i]["title"];
+                let voter = data[i]["vote_count"];
+                let id = data[i]["id"];
+                divEl.innerHTML += `<div class="column" onclick="klikFilm(${id})" style="cursor: pointer;">
+                    <img class="poster" src="https://image.tmdb.org/t/p/w500${poster}" align="left">
+                    <h3 class="movie">${judul} (${tahun.slice(0, 4)})</h3>
+                    <h3 class="rating">&#9733; ${rating} (${voter})</h3>
+                    <h3 class="deskripsi">${deskripsi}</h3>
+                </div>`
+                body.append(divEl);
+            }
+        }
     }
 });
